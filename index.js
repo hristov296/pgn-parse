@@ -4,13 +4,6 @@ const fs = require('fs');
 const formidable = require('formidable');
 const Chess = require('chess.js').Chess;
 
-let chess = new Chess();
-let moves = [];
-
-let form = new formidable.IncomingForm();
-form.uploadDir = './uploads';
-form.maxFileSize = 20 * 1024;
-
 const port = process.env.PORT || 8080;
 const app = express();
 
@@ -22,6 +15,11 @@ app.get('/pgn-home',(req,res) => {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 app.post('/pgn-read', (req,res) => {
+
+  let form = new formidable.IncomingForm();
+  form.uploadDir = './uploads';
+  form.maxFileSize = 20 * 1024;
+
   res.header('content-type', 'text/plain');
   form.parse(req, function (err, fields, files) {
     if (err) {
@@ -36,6 +34,9 @@ app.post('/pgn-read', (req,res) => {
 function parsePgn(file) {
   let result = '';
 
+  let chess = new Chess();
+  let moves = [];
+  
   pgn = fs.readFileSync(file,'utf8')
     .replace(/\[.*\]/g,'')
     .trim()
@@ -57,13 +58,14 @@ function parsePgn(file) {
 
   // console.log(moves);
   moves.some( el => {
+    console.log(el.move);
     if (chess.moves().indexOf(el.move) > -1) {
-      console.log('turn permitted');
+      // console.log('turn permitted');
       chess.move(el.move);
       return false;
     }
     if (el.turn === 'win') {
-      console.log('Game over: '+ el.move);
+      // console.log('Game over: '+ el.move);
       result += `Game over: ${el.move}`;
       return true;
     }
